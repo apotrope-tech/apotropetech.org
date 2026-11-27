@@ -1,0 +1,7 @@
+---
+import PolicyPage from '../components/PolicyPage.astro';
+import { privacy } from '../content/policies.json';
+---
+<PolicyPage title={privacy.title} description="What this site collects, and what it does not." points={privacy.points} updated={privacy.updated} other={{ href: '/accessibility', name: 'Accessibility' }}>
+  {/* TODO: once a host is chosen, say whether it keeps server logs (IP address, time, page) and for how long. */}
+</PolicyPage>

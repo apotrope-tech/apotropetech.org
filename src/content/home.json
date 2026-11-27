@@ -1,0 +1,101 @@
+{
+  "hero": {
+    "tagline": "Know before your satellite goes dark.",
+    "value": "ArcWatch is a clip-on sensor that listens for small electrical arcs on satellite solar-array cables, without touching the conductor.",
+    "alt": "The ArcWatch clamp closed around a white solar-array cable"
+  },
+  "problem": {
+    "label": "The Problem",
+    "title": "Failure starts as a spark nobody sees.",
+    "intro": "An arc is a tiny electrical spark: current jumping across a small gap on the solar array. It can be over in an instant, or it can keep burning.[[masui]]",
+    "flow": [
+      {
+        "title": "Tested on the ground",
+        "text": "Arrays are tested on the ground to survive arcs before launch.[[ecss]]"
+      },
+      {
+        "title": "Small arcs in orbit",
+        "text": "Once in orbit, solar arrays can arc.[[elhameed]]"
+      },
+      {
+        "title": "Arcs grow",
+        "text": "Those arcs can grow into sustained arcs.[[elhameed]]"
+      },
+      {
+        "title": "The array is damaged",
+        "text": "Sustained arcs damage the array.[[elhameed]]"
+      }
+    ],
+    "gap": "After launch, we found no operational monitor that watches for them.",
+    "impactLabel": "Why It Matters",
+    "impact": "The array is the satellite's power supply. Internet, weather and GPS services depend on those satellites.",
+    "impacts": [
+      {
+        "name": "Internet Service",
+        "image": "internet",
+        "alt": "A person on a sofa typing on a laptop while holding a smartphone"
+      },
+      {
+        "name": "Weather Forecasts",
+        "image": "weather",
+        "alt": "Satellite view of Hurricane Helene over the Gulf of Mexico, with the United States to the north"
+      },
+      {
+        "name": "GPS Navigation",
+        "image": "gps",
+        "alt": "A hand holding a tablet showing a GPS map, in a pine forest"
+      }
+    ]
+  },
+  "product": {
+    "label": "The Product",
+    "title": "It clips on. It listens. It never touches the conductor.",
+    "body": "ArcWatch clips around a solar-array cable. A ring inside picks up the fast burst of noise an arc makes, and a small board counts each one and reports every string's trend to the satellite. Nothing is cut, and nothing touches the conductor.",
+    "parts": [
+      "Housing",
+      "Sensing ring",
+      "Clear bore",
+      "Sensor board"
+    ],
+    "tiers": [
+      {
+        "name": "Monitor",
+        "text": "Counts arcs and shows each string's trend, so operators see trouble building."
+      },
+      {
+        "name": "Guard",
+        "text": "Does everything Monitor does, and can ask the satellite's power controller for help. It never switches flight power itself."
+      }
+    ]
+  },
+  "why": {
+    "label": "Why ArcWatch",
+    "title": "What makes ArcWatch different.",
+    "measured": [
+      "Detection rate",
+      "Added mass",
+      "Power draw"
+    ],
+    "validation": [
+      "Quotes from engineers and testers",
+      "Awards and recognition",
+      "Labs and partners"
+    ],
+    "measuredTitle": "Measured results",
+    "measuredNote": "Real numbers from bench testing go here once we have them."
+  },
+  "progress": {
+    "label": "Progress",
+    "title": "Prototype in progress.",
+    "lede": "Lab access requested, bench rig in design."
+  },
+  "team": {
+    "label": "Team",
+    "title": "The people behind ArcWatch."
+  },
+  "contact": {
+    "label": "Contact",
+    "title": "Talk to us.",
+    "lede": "Ask a question, offer lab time, or schedule a call to talk about ArcWatch."
+  }
+}

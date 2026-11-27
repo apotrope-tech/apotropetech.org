@@ -1,0 +1,5 @@
+[
+  { "when": "Planned", "what": "First real arc captures through the clamp", "kind": "Bench" },
+  { "when": "Requested", "what": "Lab time for bandwidth sweeps", "kind": "Bench" },
+  { "when": "In progress", "what": "Bench rig in design", "kind": "Design" }
+]

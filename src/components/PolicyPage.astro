@@ -1,0 +1,31 @@
+---
+// A plain standalone page for the privacy and accessibility statements.
+// Linked from the footer's bottom row only, never from the top menu. Text lives in src/content/policies.json.
+import Base from '../layouts/Base.astro';
+import { site } from '../site.config';
+interface Props { title: string; description: string; points: string[]; updated?: string; note?: string; other: { href: string; name: string } }
+const { title, description, points, updated, note, other } = Astro.props;
+---
+<Base title={title} description={description} jump={false}>
+  <article class="pp g-void wrap">
+    <header>
+      <p class="cap">ArcWatch by Apotrope{updated && `, updated ${updated}`}</p>
+      <h1 class="h-sec">{title}</h1>
+    </header>
+    <ul>{points.map((p) => <li>{p}</li>)}</ul>
+    <slot />
+    {note && <p class="note">{note}</p>}
+    <p class="note">Questions: <a class="tlink" href={`mailto:${site.email}`}>{site.email}</a></p>
+    <p class="also">See also <a class="tlink" href={other.href}>{other.name}</a></p>
+  </article>
+</Base>
+<style>
+  .pp { display: grid; gap: 28px; max-width: calc(44rem + 2 * var(--m)); margin-inline: auto; padding-top: calc(var(--head-h) + clamp(56px, 8vw, 112px)); padding-bottom: clamp(72px, 9vw, 128px); }
+  header { display: grid; gap: 16px; }
+  ul { display: grid; border-top: 1px solid var(--line); }
+  li { position: relative; padding: 16px 0 16px 24px; border-bottom: 1px solid var(--line); color: var(--soft); text-wrap: pretty; }
+  li::before { content: ''; position: absolute; left: 0; top: calc(16px + .78em); width: 10px; height: 2px; background: var(--accent-text); }
+  .note { color: var(--soft); }
+  .note a, .also a { color: var(--ink); font-weight: 600; }
+  .also { color: var(--dim); font-size: 14.5px; }
+</style>

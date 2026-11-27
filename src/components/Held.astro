@@ -1,0 +1,19 @@
+---
+// "Coming soon" banner for a section the team is reworking. The section keeps its id and number,
+// so the menu still lands here. Switch the section back on in src/site.config.ts.
+import { sections } from '../sections';
+interface Props { id: string; label: string }
+const { id, label } = Astro.props;
+const n = String(sections.findIndex((s) => s.id === id) + 1).padStart(2, '0');
+---
+<div class="wrap">
+  <div class="held" data-reveal>
+    <p class="label"><span class="num" aria-hidden="true">{n}</span>{label}</p>
+    <h2 class="h-sec" id={`${id}-title`}>Coming Soon</h2>
+    <p class="lede">We are updating this section. Check back soon.</p>
+  </div>
+</div>
+<style>
+  .held { display: grid; justify-items: center; align-content: center; gap: 20px; max-width: 1200px; min-height: clamp(320px, 36vw, 480px); margin-inline: auto; padding: clamp(40px, 5vw, 72px) 24px; border: 1px dashed var(--line-strong); background: repeating-linear-gradient(135deg, transparent 0 14px, var(--grid) 14px 15px); text-align: center; }
+  .held .h-sec { font-size: clamp(44px, 6vw, 96px); }
+</style>

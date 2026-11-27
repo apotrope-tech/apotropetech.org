@@ -1,0 +1,153 @@
+---
+// The clamp opening around the cable. Replaces the old 300vh scroll scrub.
+// It plays once when it comes into view, then the visitor can open, close or drag it. It never redraws while the page scrolls.
+// Without JavaScript, or with reduced motion, it shows the finished exploded view with its labels.
+// The leader lines and their end points are aimed at the wide frames in public/frames/d. New frames mean re-aiming `ends`.
+import { Picture } from 'astro:assets';
+import final from '../assets/renders/explode.png';
+
+const { parts } = Astro.props as { parts: string[] };
+const FRAMES = 32;
+// Leader start (on the part) and end (the numbered tag), in the 1440 x 810 frame space.
+const leaders = [
+  { from: [272, 544], to: [137, 688] },
+  { from: [556, 505], to: [439, 688] },
+  { from: [722, 436], to: [742, 688] },
+  { from: [1066, 604], to: [1044, 688] },
+];
+---
+<div class="player" data-frames={FRAMES}>
+  <div class="stage">
+    <Picture class="still" src={final} formats={['avif', 'webp']} widths={[828, 1440, 1920]} sizes="100vw" quality={72} alt="Render of the clamp opened up: two hinged housing halves, a split ferrite ring with a copper winding, and a small sensor board, opened around the cable" loading="lazy" />
+    <canvas hidden aria-hidden="true"></canvas>
+    <svg class="leaders" viewBox="0 0 1440 810" aria-hidden="true">
+      {leaders.map(({ from, to }, i) => (
+        <g data-p={i + 1}>
+          <path d={`M${from[0]} ${from[1]}V${to[1]}H${to[0]}`} fill="none" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke" />
+          <circle cx={from[0]} cy={from[1]} r="4" fill="currentColor" />
+          <rect x={to[0] - (to[0] < from[0] ? 30 : 0)} y={to[1] - 15} width="30" height="30" fill="#000" stroke="currentColor" stroke-width="1.2" vector-effect="non-scaling-stroke" />
+          <text x={to[0] + (to[0] < from[0] ? -15 : 15)} y={to[1] + 6} text-anchor="middle" font-size="17" font-weight="600" fill="currentColor" font-family="var(--sans)">{i + 1}</text>
+        </g>
+      ))}
+    </svg>
+  </div>
+
+  <div class="under">
+    <div class="controls" hidden>
+      <button class="btn line toggle" type="button" aria-pressed="false"><span class="to-open">Open the clamp</span><span class="to-close">Close the clamp</span></button>
+      <label class="scrub"><span class="small">Closed</span><input type="range" min="0" max={FRAMES - 1} value="0" step="1" aria-label="Open the clamp, frame by frame" /><span class="small">Open</span></label>
+    </div>
+    <ol class="parts">
+      {parts.map((p, i) => <li data-p={i + 1}><span class="pn">{i + 1}</span><span class="h-item">{p}</span></li>)}
+    </ol>
+  </div>
+</div>
+
+<script>
+  const el = document.querySelector<HTMLElement>('.player');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)');
+  if (el && !reduce.matches) {
+    const canvas = el.querySelector('canvas')!;
+    const ctx = canvas.getContext('2d', { alpha: false })!;
+    const controls = el.querySelector<HTMLElement>('.controls')!;
+    const toggle = el.querySelector<HTMLButtonElement>('.toggle')!;
+    const range = el.querySelector<HTMLInputElement>('input[type=range]')!;
+    const n = Number(el.dataset.frames);
+    const last = n - 1;
+    const tall = matchMedia('(max-width: 859px)');
+    let frames: HTMLImageElement[] = [];
+    let cur = 0, target = 0, raf = 0, prevT = 0, ready = false, played = false, seen = false, loading: Promise<void> | null = null;
+
+    const draw = (i: number) => {
+      const f = frames[i];
+      if (!f) return;
+      if (canvas.width !== f.naturalWidth) { canvas.width = f.naturalWidth; canvas.height = f.naturalHeight; }
+      ctx.drawImage(f, 0, 0);
+      cur = i;
+      range.value = String(i);
+      const open = i === last;
+      el.toggleAttribute('data-open', open);
+      toggle.setAttribute('aria-pressed', String(open || target === last));
+    };
+    // Time-based, so a slow device drops frames instead of slowing the motion down. About 1.1 s end to end.
+    const step = (t: number) => {
+      raf = 0;
+      const due = prevT ? Math.round((t - prevT) / 34) : 1;
+      if (due < 1) { raf = requestAnimationFrame(step); return; }
+      prevT = t;
+      const next = cur < target ? Math.min(target, cur + due) : Math.max(target, cur - due);
+      draw(next);
+      if (next !== target) raf = requestAnimationFrame(step);
+    };
+    const animateTo = (t: number) => { target = t; prevT = 0; toggle.setAttribute('aria-pressed', String(t === last)); if (!raf && cur !== t) raf = requestAnimationFrame(step); };
+
+    // Every frame is fetched and decoded before anything plays, so playback never waits on the network or the decoder.
+    const load = () => loading ??= (async () => {
+      const folder = tall.matches ? 'm' : 'd';
+      frames = Array.from({ length: n }, (_, i) => { const im = new Image(); im.src = `/frames/${folder}/${String(i).padStart(2, '0')}.webp`; return im; });
+      try { await Promise.all(frames.map((f) => f.decode())); } catch { loading = null; return; }   // keep the still view
+      ready = true;
+      draw(played ? last : 0);
+      canvas.hidden = false;
+      controls.hidden = false;
+      el.setAttribute('data-live', '');
+      if (seen && !played) play();
+    })();
+    const play = () => { played = true; setTimeout(() => animateTo(last), 250); };
+
+    toggle.addEventListener('click', () => { played = true; animateTo(target === last ? 0 : last); });
+    range.addEventListener('input', () => { played = true; cancelAnimationFrame(raf); raf = 0; target = Number(range.value); draw(target); });
+
+    new IntersectionObserver((es, io) => { if (es[0].isIntersecting) { io.disconnect(); load(); } }, { rootMargin: '120% 0px' }).observe(el);
+    new IntersectionObserver((es, io) => {
+      if (!es[0].isIntersecting) return;
+      io.disconnect(); seen = true;
+      if (ready && !played) play();
+    }, { threshold: .55 }).observe(el.querySelector('.stage')!);
+    // Rotating a tablet can switch between the wide and the tall frames.
+    tall.addEventListener('change', () => { loading = null; ready = false; const keep = cur; load()?.then(() => draw(keep)); });
+  }
+</script>
+
+<style>
+  .player { position: relative; }
+  .stage { position: relative; aspect-ratio: 16 / 9; overflow: hidden; background: #000; }
+  .stage :global(.still), .stage :global(.still img), canvas { width: 100%; height: 100%; object-fit: cover; }
+  canvas { position: absolute; inset: 0; display: block; }
+  canvas[hidden] { display: none; }
+  /* Soft edges so the cable leaves the frame instead of stopping at a hard cut. Static, so it is painted once. */
+  .stage::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, #000, transparent 7%, transparent 93%, #000), linear-gradient(#000, transparent 9%, transparent 88%, #000); }
+
+  .leaders { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; color: #9aa09d; transition: opacity .45s var(--ease); }
+  .leaders g { transition: color .2s; }
+  [data-live]:not([data-open]) .leaders { opacity: 0; }
+  .player:has(.parts li[data-p='1']:hover) .leaders g[data-p='1'],
+  .player:has(.parts li[data-p='2']:hover) .leaders g[data-p='2'],
+  .player:has(.parts li[data-p='3']:hover) .leaders g[data-p='3'],
+  .player:has(.parts li[data-p='4']:hover) .leaders g[data-p='4'] { color: #f0824a; }
+
+  .under { padding-inline: var(--m); }
+  .controls { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 16px 32px; padding-block: 24px 4px; }
+  .controls[hidden] { display: none; }
+  .to-close, [aria-pressed='true'] .to-open { display: none; }
+  [aria-pressed='true'] .to-close { display: inline; }
+  .scrub { display: flex; align-items: center; gap: 14px; flex: 1; max-width: 460px; }
+  input[type=range] { flex: 1; min-width: 120px; height: 28px; margin: 0; background: transparent; appearance: none; cursor: grab; }
+  input[type=range]:active { cursor: grabbing; }
+  input[type=range]::-webkit-slider-runnable-track { height: 1px; background: var(--line-strong); }
+  input[type=range]::-moz-range-track { height: 1px; background: var(--line-strong); }
+  input[type=range]::-webkit-slider-thumb { appearance: none; width: 14px; height: 22px; margin-top: -11px; background: var(--ink); border: 0; border-radius: 0; transition: background-color .15s; }
+  input[type=range]::-moz-range-thumb { width: 14px; height: 22px; background: var(--ink); border: 0; border-radius: 0; }
+  input[type=range]:hover::-webkit-slider-thumb { background: var(--accent); }
+
+  .parts { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px clamp(20px, 3vw, 48px); max-width: 960px; margin: 28px auto 0; padding-top: 24px; border-top: 1px solid var(--line); }
+  .parts li { display: flex; align-items: center; gap: 12px; }
+  .pn { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--line-strong); font: 600 14px/1 var(--sans); transition: border-color .2s, color .2s; }
+  .parts li:hover .pn { border-color: var(--accent); color: var(--accent-text); }
+  @media (max-width: 859px) {
+    /* Tall frames, no leaders: the numbered list carries the labels. */
+    [data-live] .stage { aspect-ratio: 3 / 4; width: min(100%, 61svh); margin-inline: auto; }
+    .leaders { display: none; }
+    .stage::after { background: linear-gradient(#000, transparent 7%, transparent 90%, #000); }
+  }
+</style>

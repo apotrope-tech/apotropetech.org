@@ -1,0 +1,9 @@
+---
+// Turns [[masui]] in content text into a numbered link to that source in the Sources list on this page.
+import sources from '../content/sources.json';
+
+const { text } = Astro.props;
+const parts = String(text).split(/\[\[(\w+)\]\]/);
+const number = (id: string) => sources.findIndex((s) => s.id === id) + 1;
+---
+{parts.map((p, i) => (i % 2 ? <a class="sup" href={`#src-${p}`} aria-label={`Source ${number(p)}`}>{number(p)}</a> : p))}

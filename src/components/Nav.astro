@@ -1,0 +1,86 @@
+---
+// Top navigation: every section is one click away. On phones the same links open from a Menu button.
+import Logo from './Logo.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import { sections } from '../sections';
+const links = sections.filter((s) => s.id !== 'contact');
+---
+<header class="nav">
+  <div class="bar">
+    <a class="brand" href="#top" aria-label="Apotrope, back to top"><Logo kind="mark" /><Logo kind="word" /></a>
+    <nav aria-label="Main">
+      <ul class="links">
+        <li><a href="#top" data-id="top">Home</a></li>
+        {links.map((s) => <li><a href={`#${s.id}`} data-id={s.id}>{s.name}</a></li>)}
+      </ul>
+    </nav>
+    <a class="cta" href="#contact" data-id="contact">Contact us</a>
+    <ThemeToggle />
+    <button class="menu-btn" type="button" aria-expanded="false" aria-controls="menu">Menu</button>
+  </div>
+  <ul id="menu" class="menu" hidden>
+    <li><a href="#top">Home</a></li>
+    {sections.map((s) => <li><a href={`#${s.id}`}>{s.name}</a></li>)}
+  </ul>
+</header>
+
+<script>
+  import { sections } from '../sections';
+  const nav = document.querySelector<HTMLElement>('.nav')!;
+  const btn = nav.querySelector<HTMLButtonElement>('.menu-btn')!;
+  const menu = nav.querySelector<HTMLElement>('#menu')!;
+  const setOpen = (open: boolean) => { btn.setAttribute('aria-expanded', String(open)); menu.hidden = !open; btn.textContent = open ? 'Close' : 'Menu'; };
+  btn.addEventListener('click', () => setOpen(btn.getAttribute('aria-expanded') !== 'true'));
+  menu.addEventListener('click', (e) => { if ((e.target as Element).closest('a')) setOpen(false); });
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !menu.hidden) { setOpen(false); btn.focus(); } });
+
+  // Underline the section on screen, and give the bar a solid background once the page scrolls.
+  const links = [...nav.querySelectorAll<HTMLAnchorElement>('[data-id]')];
+  const targets = sections.map((s) => document.getElementById(s.id)).filter(Boolean) as HTMLElement[];
+  let queued = 0, current = '';
+  const update = () => {
+    queued = 0;
+    let id = 'top';
+    for (const t of targets) if (t.getBoundingClientRect().top <= innerHeight * .4) id = t.id;
+    nav.toggleAttribute('data-scrolled', scrollY > 24);
+    if (id === current) return;
+    current = id;
+    links.forEach((a) => { if (a.dataset.id === id) a.setAttribute('aria-current', 'location'); else a.removeAttribute('aria-current'); });
+  };
+  addEventListener('scroll', () => { queued ||= requestAnimationFrame(update); }, { passive: true });
+  update();
+</script>
+
+<style>
+  .nav { position: fixed; z-index: 20; inset: 0 0 auto; color: #f1f2ef; transition: background-color .3s var(--ease), border-color .3s var(--ease); border-bottom: 1px solid transparent; }
+  .nav[data-scrolled] { background: rgba(0, 0, 0, .92); border-bottom-color: #262a2c; }
+  .bar { display: flex; align-items: center; gap: clamp(10px, 2vw, 24px); height: var(--head-h); padding-inline: var(--m); }
+  .brand { display: inline-flex; align-items: center; gap: 12px; margin-right: auto; }
+  .brand .mark { height: 26px; }
+  .brand .word { height: 10px; }
+  .links { display: flex; gap: clamp(18px, 2.2vw, 34px); }
+  .links a, .cta { font: 500 15px/1 var(--sans); font-stretch: 106%; }
+  .links a { display: block; padding-block: 10px; color: #b8bcb7; background: linear-gradient(#f0824a, #f0824a) 0 100% / 0 2px no-repeat; transition: color .2s, background-size .3s var(--ease); }
+  .links a:hover { color: #f1f2ef; }
+  .links a[aria-current] { color: #f1f2ef; background-size: 100% 2px; }
+  .cta { display: inline-flex; align-items: center; min-height: 40px; padding: 0 16px; margin-left: 8px; border-radius: 2px; background: #f1f2ef; color: #000; font-weight: 600; transition: background-color .2s; }
+  .cta:hover { background: #f0824a; }
+  .menu-btn { display: none; min-height: 44px; padding-inline: 14px; border: 1px solid #4a4f51; font: 600 15px/1 var(--sans); }
+  .menu { display: grid; padding: 8px var(--m) 20px; background: #000; border-bottom: 1px solid #262a2c; }
+  .menu[hidden] { display: none; }
+  .menu a { display: block; padding: 14px 0; border-top: 1px solid #262a2c; font: 600 20px/1.2 var(--sans); font-stretch: 110%; }
+  /* Light mode: the bar turns pale to match the paper ground. */
+  :global(:root[data-theme='light']) .nav { color: #0d1113; }
+  :global(:root[data-theme='light']) .nav[data-scrolled] { background: rgba(247, 248, 246, .94); border-bottom-color: #d3d8d5; }
+  :global(:root[data-theme='light']) .links a { color: #3a4144; background-image: linear-gradient(#a3410f, #a3410f); }
+  :global(:root[data-theme='light']) .links a:hover, :global(:root[data-theme='light']) .links a[aria-current] { color: #0d1113; }
+  :global(:root[data-theme='light']) .cta { background: #0d1113; color: #fff; }
+  :global(:root[data-theme='light']) .cta:hover { background: #a3410f; }
+  :global(:root[data-theme='light']) .menu-btn { border-color: #8e9693; }
+  :global(:root[data-theme='light']) .menu { background: #f7f8f6; border-bottom-color: #d3d8d5; }
+  :global(:root[data-theme='light']) .menu a { border-top-color: #d3d8d5; }
+  @media (max-width: 899px) {
+    .nav nav, .cta { display: none; }
+    .menu-btn { display: block; }
+  }
+</style>

@@ -1,0 +1,5 @@
+[
+  { "id": "elhameed", "text": "Abd El-Hameed et al., \"Analysis of space solar array arc images based on deep learning techniques,\" Scientific Reports, 2025.", "url": "https://doi.org/10.1038/s41598-025-97579-y" },
+  { "id": "ecss", "text": "ECSS-E-ST-20-06C, Space engineering: Spacecraft charging, solar array secondary arc test.", "url": "https://www.spenvis.oma.be/ecss/frame.php/e_st_20_06c/16_02_05" },
+  { "id": "masui", "text": "Masui et al., \"Characterization Experiments of Secondary Arcs on Solar Arrays: Threshold and Duration,\" Journal of Spacecraft and Rockets, 2010.", "url": "https://doi.org/10.2514/1.49571" }
+]

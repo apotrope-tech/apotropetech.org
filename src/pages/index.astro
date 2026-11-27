@@ -1,0 +1,331 @@
+---
+import { getCollection } from 'astro:content';
+import { Picture } from 'astro:assets';
+import Base from '../layouts/Base.astro';
+import Cited from '../components/Cited.astro';
+import SectionHead from '../components/SectionHead.astro';
+import ClampPlayer from '../components/ClampPlayer.astro';
+import ContactForm from '../components/ContactForm.astro';
+import Social from '../components/Social.astro';
+import Soon from '../components/Soon.astro';
+import Held from '../components/Held.astro';
+import { site } from '../site.config';
+import c from '../content/home.json';
+import status from '../content/status.json';
+import team from '../content/team.json';
+import heroImg from '../assets/renders/hero-cut.png';
+import internetImg from '../assets/impacts/internet.jpg';
+import weatherImg from '../assets/impacts/weather.png';
+import gpsImg from '../assets/impacts/gps.jpg';
+// Stock and agency images for "Why it matters". Credits are in the footer.
+const impactImg: Record<string, ImageMetadata> = { internet: internetImg, weather: weatherImg, gps: gpsImg };
+
+// Progress line: finished log entries first (oldest to newest), then what is happening now and next.
+const done = (await getCollection('progress')).sort((a, b) => +a.data.date - +b.data.date);
+const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+const steps = [
+  ...done.map((e) => ({ when: fmt(e.data.date), what: e.data.title, state: 'done' })),
+  ...[...status].reverse().map((s) => ({ when: s.when, what: s.what, state: s.when === 'In progress' ? 'now' : 'next' })),
+];
+
+// Team photos: drop a file in src/assets/team and name it in team.json.
+const photos = import.meta.glob<{ default: ImageMetadata }>('../assets/team/*.{jpg,jpeg,png,webp,avif}', { eager: true });
+const photoFor = (file: string) => (file ? photos[`../assets/team/${file}`]?.default : undefined);
+const initials = (name: string) => name.split(' ').map((w) => w[0]).join('');
+---
+<Base description={c.hero.value}>
+  <!-- Home -->
+  <section class="hero g-void" aria-labelledby="hero-title">
+    <div class="hero-copy">
+      <p class="product">ArcWatch <span>by Apotrope</span></p>
+      <h1 class="h-hero" id="hero-title">{c.hero.tagline}</h1>
+      <p class="lede">{c.hero.value}</p>
+      <div class="ctas">
+        {site.showProduct ? <a class="btn" href="#product">See it work</a> : <a class="btn" href="#problem">Learn more</a>}
+        <a class="btn line" href="#contact">Contact us</a>
+      </div>
+    </div>
+    <figure class="hero-art">
+      <Picture src={heroImg} formats={['avif', 'webp']} widths={[720, 1080, 1440, 1920]} sizes="(min-width: 960px) 60vw, 120vw" quality={74} loading="eager" fetchpriority="high" alt={c.hero.alt} />
+    </figure>
+  </section>
+
+  <!-- Problem -->
+  <section class="sec g-film" id="problem" aria-labelledby="problem-title">
+    <SectionHead id="problem" label={c.problem.label} title={c.problem.title} lede={c.problem.intro} />
+    <!-- Flow chart: how an unseen arc becomes a damaged array. The copper bracket marks the stretch nobody watches today. -->
+    <div class="flow wrap">
+      <ol>
+        {c.problem.flow.map((p, i) => (
+          <li data-reveal style={`transition-delay:${i * 90}ms`} class:list={{ end: i === c.problem.flow.length - 1 }}>
+            <span class="pnum">{i + 1}</span>
+            <h3 class="h-item">{p.title}</h3>
+            <p><Cited text={p.text} /></p>
+          </li>
+        ))}
+      </ol>
+      <p class="gap" data-reveal><b>Unwatched in orbit</b>{c.problem.gap}</p>
+    </div>
+
+    <div class="impact wrap">
+      <h3 class="label impact-label">{c.problem.impactLabel}</h3>
+      <p class="impact-line">{c.problem.impact}</p>
+      <ul>
+        {c.problem.impacts.map((m, i) => (
+          <li data-reveal style={`transition-delay:${i * 90}ms`}>
+            <Picture src={impactImg[m.image]} formats={['avif', 'webp']} widths={[480, 760, 1100]} sizes="(min-width: 760px) 33vw, 100vw" quality={70} alt={m.alt} loading="lazy" />
+            <h3 class="h-item">{m.name}</h3>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </section>
+
+  <!-- Product -->
+  <section class="sec g-void" id="product" aria-labelledby="product-title">
+    {site.showProduct ? (
+      <>
+        <SectionHead id="product" label={c.product.label} title={c.product.title} lede={c.product.body} />
+        <ClampPlayer parts={c.product.parts} />
+        <div class="tiers wrap">
+          {c.product.tiers.map((t, i) => (
+            <article data-reveal style={`transition-delay:${i * 100}ms`}>
+              <h3 class="h-sub">{t.name}</h3>
+              <p>{t.text}</p>
+            </article>
+          ))}
+        </div>
+      </>
+    ) : (
+      <Held id="product" label={c.product.label} />
+    )}
+  </section>
+
+  <!-- Why ArcWatch -->
+  <section class="sec g-film" id="why" aria-labelledby="why-title">
+    <SectionHead id="why" label={c.why.label} title={c.why.title} />
+    <div class="results wrap" data-reveal>
+      <h3 class="h-sub">{c.why.measuredTitle}</h3>
+      <p class="rnote">{c.why.measuredNote}</p>
+      {/* TODO: replace each "—" with a real percentage once bench testing measures it, and label it "bench". Never estimate. */}
+      <ul>{c.why.measured.map((m) => <li><p class="rbig">—<span>%</span></p><p class="rname">{m}</p><small>After bench testing</small></li>)}</ul>
+    </div>
+
+    <div class="validation wrap" data-reveal>
+      <h3 class="h-sub">What others say</h3>
+      {/* TODO: add quotes, awards or partner names only with each person's or organisation's permission. */}
+      <ul class="tiles">{c.why.validation.map((v) => <li><p class="quote" aria-hidden="true">“</p><p>{v}</p><small>Coming soon</small></li>)}</ul>
+    </div>
+  </section>
+
+  <!-- Progress -->
+  <section class="sec g-void" id="progress" aria-labelledby="progress-title">
+    {site.showProgress ? (
+      <>
+        <SectionHead id="progress" label={c.progress.label} title={c.progress.title} lede={c.progress.lede} />
+        <ol class="timeline wrap" data-reveal style={`--n:${steps.length}`}>
+          {steps.map((s) => (
+            <li class={s.state}>
+              <span class="dot" aria-hidden="true"></span>
+              <p class="when">{s.state === 'done' ? `Done, ${s.when}` : s.when}</p>
+              <p class="what">{s.what}</p>
+            </li>
+          ))}
+        </ol>
+        <p class="proto wrap" data-reveal><span>Prototype. Not flight hardware.</span></p>
+      </>
+    ) : (
+      <Held id="progress" label={c.progress.label} />
+    )}
+  </section>
+
+  <!-- Team -->
+  <section class="sec g-film" id="team" aria-labelledby="team-title">
+    <SectionHead id="team" label={c.team.label} title={c.team.title} />
+    <ul class="people wrap">
+      {team.map((m, i) => {
+        const photo = photoFor(m.photo);
+        return (
+          <li data-reveal style={`transition-delay:${i * 80}ms`}>
+            <div class:list={['ph', { empty: !photo }]}>
+              {photo
+                ? <Picture src={photo} formats={['avif', 'webp']} widths={[400, 700]} sizes="(min-width: 960px) 22vw, 46vw" alt={`Portrait of ${m.name}`} loading="lazy" />
+                : <><span class="ini" aria-hidden="true">{initials(m.name)}</span><span class="pl">Photo coming soon</span></>}
+            </div>
+            <h3 class="h-sub">{m.name}</h3>
+            <p class="role">{m.role}</p>
+            {/* TODO: each person writes their own one or two sentences in team.json ("bio"). */}
+            {m.bio ? <p class="bio">{m.bio}</p> : <p class="bio empty">Description coming soon</p>}
+          </li>
+        );
+      })}
+    </ul>
+    <div class="story wrap" data-reveal>
+      {/* TODO: paste the team's own story here. Do not write it for them. */}
+      <Soon label="Our story" />
+    </div>
+  </section>
+
+  <!-- Contact -->
+  <section class="sec g-void" id="contact" aria-labelledby="contact-title">
+    <SectionHead id="contact" label={c.contact.label} title={c.contact.title} lede={c.contact.lede} />
+    <div class="reach wrap">
+      <div class="form-side" data-reveal><ContactForm /></div>
+      <aside class="direct" data-reveal>
+        <div>
+          <h3 class="h-item">Email</h3>
+          <a class="mail tlink" href={`mailto:${site.email}`}>{site.email}</a>
+        </div>
+        <div>
+          <h3 class="h-item">Book a call</h3>
+          {site.bookingUrl
+            ? <a class="btn line" href={site.bookingUrl} rel="noopener noreferrer" target="_blank">Pick a time</a>
+            : <p class="small">Choose “Schedule a call” in the form and tell us when suits you. We will send an invite.</p>}
+        </div>
+        <div>
+          <h3 class="h-item">Follow along</h3>
+          <Social />
+        </div>
+      </aside>
+    </div>
+  </section>
+</Base>
+
+<style>
+  /* ---------- Home ---------- */
+  .hero { position: relative; display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); column-gap: clamp(16px, 2vw, 32px); align-items: center; min-height: max(620px, min(100svh, 940px)); padding: calc(var(--head-h) + 24px) var(--m) 48px; overflow: hidden; }
+  .hero-copy { grid-column: 1 / span 5; grid-row: 1; position: relative; z-index: 2; display: grid; gap: clamp(18px, 2vw, 28px); justify-items: start; }
+  .product { font: 600 15px/1 var(--sans); font-stretch: 118%; }
+  .product span { font-weight: 500; font-stretch: 104%; color: var(--dim); margin-left: 8px; }
+  .hero .lede { max-width: 30rem; font-size: clamp(17px, 1.3vw, 20px); }
+  .ctas { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+  .hero-art { grid-column: 5 / -1; grid-row: 1; margin-right: calc(var(--m) * -1 - 4vw); }
+  .hero-art :global(img) { width: 100%; mask-image: linear-gradient(64deg, transparent 22%, #000 40%); }
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-copy > * { animation: rise .9s var(--ease) both; }
+    .hero-copy > :nth-child(2) { animation-delay: .06s; } .hero-copy > :nth-child(3) { animation-delay: .12s; } .hero-copy > :nth-child(4) { animation-delay: .18s; }
+    .hero-art { animation: settle 1.4s var(--ease) both; }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } }
+    @keyframes settle { from { opacity: 0; transform: translateX(3%); } }
+  }
+
+  /* Shared: content columns sit centred under their section heading. */
+  .tiers, .results, .validation, .timeline, .people, .reach { max-width: 1200px; margin-inline: auto; box-sizing: content-box; }
+
+  /* ---------- Problem ---------- */
+  .flow, .impact { max-width: 1200px; margin-inline: auto; box-sizing: content-box; }
+  .flow ol { --g: clamp(28px, 3vw, 48px); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--g); }
+  .flow li { position: relative; display: grid; justify-items: center; align-content: start; gap: 10px; padding: 24px 18px; border: 1px solid var(--line-strong); background: var(--plate); text-align: center; }
+  .flow li.end { border-color: var(--accent); }
+  .flow li p { color: var(--soft); font-size: 15.5px; line-height: 1.45; }
+  /* Arrow from each step to the next: a shaft and a head, drawn in the gap. */
+  .flow li:not(:last-child)::after { content: ''; position: absolute; top: 50%; left: calc(100% + 4px); width: calc(var(--g) - 14px); height: 1.5px; background: var(--ink); }
+  .flow li:not(:last-child)::before { content: ''; position: absolute; top: calc(50% - 5px); left: calc(100% + var(--g) - 12px); border-block: 6px solid transparent; border-left: 9px solid var(--ink); margin-top: -.25px; }
+  .pnum { display: grid; place-items: center; width: 36px; height: 36px; border: 1px solid var(--accent); color: var(--accent-text); font: 600 15px/1 var(--sans); }
+  /* The bracket sits under steps 2 to 4: the time in orbit that nobody watches. */
+  .gap { display: grid; gap: 4px; margin-left: calc((100% + clamp(28px, 3vw, 48px)) / 4); margin-top: 18px; padding-top: 16px; border-top: 2px solid var(--accent); position: relative; text-align: center; color: var(--soft); }
+  .gap::before, .gap::after { content: ''; position: absolute; top: -12px; width: 2px; height: 12px; background: var(--accent); }
+  .gap::before { left: 0; } .gap::after { right: 0; }
+  .gap b { color: var(--accent-text); font-weight: 600; font-stretch: 110%; }
+
+  .impact { display: grid; justify-items: center; gap: 14px; margin-top: clamp(72px, 8vw, 120px); text-align: center; }
+  .impact-line { max-width: 34rem; font: 600 clamp(20px, 2vw, 28px)/1.25 var(--sans); font-stretch: 110%; letter-spacing: -.015em; text-wrap: balance; }
+  .impact ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 24px); width: 100%; margin-top: 22px; }
+  .impact li { display: grid; gap: 14px; justify-items: center; }
+  .impact li .h-item { font-size: clamp(18px, 1.4vw, 21px); }
+  .impact li :global(img) { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #000; }
+
+  /* ---------- Product ---------- */
+  .tiers { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(16px, 2vw, 32px); margin-top: clamp(48px, 5vw, 80px); }
+  .tiers article { display: grid; gap: 10px; align-content: start; padding: 28px; border: 1px solid var(--line-strong); text-align: center; justify-items: center; }
+  .tiers article + article { border-color: var(--accent); }
+  .tiers p { color: var(--soft); max-width: 30rem; }
+
+  /* ---------- Why ArcWatch ---------- */
+  .results { display: grid; justify-items: center; text-align: center; margin-bottom: clamp(56px, 6vw, 96px); }
+  .rnote { margin-top: 8px; color: var(--dim); }
+  .results ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: clamp(12px, 1.6vw, 24px); width: 100%; margin-top: 28px; }
+  .results li { display: grid; justify-items: center; align-content: center; gap: 10px; min-height: clamp(220px, 22vw, 300px); padding: 28px 16px; border: 1px dashed var(--line-strong); background: var(--plate); }
+  .rbig { font: 600 clamp(80px, 9vw, 144px)/.85 var(--sans); font-stretch: 120%; letter-spacing: -.05em; color: var(--line-strong); }
+  .rbig span { font-size: .5em; margin-left: 4px; }
+  .rname { font: 600 clamp(19px, 1.6vw, 24px)/1.2 var(--sans); font-stretch: 110%; }
+  .results small { font-size: 14px; color: var(--dim); }
+  .validation { margin-top: 0; }
+  .validation h3 { text-align: center; margin-bottom: 18px; }
+  .tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .tiles li { display: grid; grid-template-rows: 56px auto auto; justify-items: center; align-items: center; align-content: center; gap: 6px; min-height: 168px; padding: 18px 12px; border: 1px dashed var(--line-strong); text-align: center; }
+  .tiles .quote { font: 600 64px/1 var(--sans); color: var(--line-strong); height: 40px; overflow: hidden; }
+  .tiles p:not(.quote) { font-weight: 600; font-stretch: 106%; line-height: 1.3; }
+  .tiles small { font-size: 13px; color: var(--dim); }
+
+  /* ---------- Progress ---------- */
+  .timeline { position: relative; display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); text-align: center; }
+  .timeline::before { content: ''; position: absolute; left: calc(var(--m) + (100% - 2 * var(--m)) / var(--n) / 2); right: calc(var(--m) + (100% - 2 * var(--m)) / var(--n) / 2); top: 11px; height: 1px; background: var(--line-strong); }
+  .timeline li { position: relative; display: grid; justify-items: center; align-content: start; gap: 8px; padding-inline: 12px; }
+  .dot { width: 23px; height: 23px; border: 1px solid var(--line-strong); background: var(--bg); margin-bottom: 10px; }
+  .done .dot { background: var(--ink); border-color: var(--ink); }
+  .now .dot { border: 2px solid var(--accent); background: radial-gradient(var(--accent) 0 4px, var(--bg) 5px); }
+  .when { font-size: 14px; color: var(--dim); }
+  .now .when { color: var(--accent-text); font-weight: 600; }
+  .what { font-weight: 600; font-stretch: 106%; max-width: 15rem; }
+  .proto { display: flex; justify-content: center; margin-top: clamp(40px, 4vw, 64px); }
+  .proto span { padding: 10px 16px 10px 52px; border: 1px solid var(--accent); color: var(--accent-text); font: 600 14px/1.2 var(--sans); font-stretch: 110%; background: repeating-linear-gradient(-55deg, var(--accent) 0 6px, transparent 6px 12px) 0 0 / 36px 100% no-repeat; }
+
+  /* ---------- Team ---------- */
+  .people { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: clamp(16px, 2vw, 32px); text-align: center; }
+  .people > li { display: grid; justify-items: center; align-content: start; gap: 6px; }
+  .ph { position: relative; width: 100%; aspect-ratio: 4 / 5; overflow: hidden; background: #000; margin-bottom: 12px; }
+  .ph :global(img) { width: 100%; height: 100%; object-fit: cover; }
+  .ph.empty { display: grid; place-items: center; align-content: center; gap: 10px; background: repeating-linear-gradient(-45deg, var(--plate-2) 0 1px, transparent 1px 11px), var(--plate); border: 1px solid var(--line-strong); }
+  .ini { font: 600 clamp(44px, 5vw, 80px)/1 var(--sans); font-stretch: 125%; letter-spacing: -.04em; transition: letter-spacing .5s var(--ease); }
+  .people > li:hover .ini { letter-spacing: .02em; }
+  .pl { font-size: 13px; color: var(--dim); }
+  .role { font: 600 14px/1.3 var(--sans); font-stretch: 112%; color: var(--accent-text); }
+  .bio { width: 100%; margin-top: 8px; padding: 14px; border: 1px solid var(--line); font-size: 15px; color: var(--soft); }
+  .bio.empty { border-style: dashed; border-color: var(--line-strong); color: var(--dim); }
+  .story { max-width: 560px; margin: clamp(40px, 4vw, 64px) auto 0; text-align: center; }
+
+  /* ---------- Contact ---------- */
+  .reach { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(32px, 4vw, 72px); align-items: start; }
+  .direct { display: grid; gap: 28px; padding: 28px; border: 1px solid var(--line-strong); }
+  .direct .h-item { margin-bottom: 10px; }
+  .mail { font: 600 clamp(18px, 1.5vw, 21px)/1.3 var(--sans); font-stretch: 106%; word-break: break-word; }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1099px) {
+    .people { grid-template-columns: repeat(2, minmax(0, 1fr)); row-gap: 40px; }
+  }
+  @media (max-width: 959px) {
+    /* Steps stack and arrows point down. The unwatched note follows the last step. */
+    .flow { max-width: 30rem; }
+    .flow ol { grid-template-columns: 1fr; }
+    .flow li:not(:last-child)::after { top: calc(100% + 4px); left: 50%; width: 1.5px; height: calc(var(--g) - 14px); }
+    .flow li:not(:last-child)::before { top: calc(100% + var(--g) - 12px); left: calc(50% - 5.25px); border-inline: 6px solid transparent; border-block: 0; border-top: 9px solid var(--ink); margin-top: 0; }
+    .gap { margin-left: 0; margin-top: 24px; }
+    .gap::before, .gap::after { display: none; }
+
+    .hero { min-height: 0; padding-top: calc(var(--head-h) + 40px); }
+    .hero-copy { grid-column: 1 / -1; }
+    .hero-art { grid-column: 1 / -1; grid-row: 2; margin: 8px calc(var(--m) * -1 - 10vw) 0 -6vw; }
+    .reach { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 759px) {
+    .tiers { grid-template-columns: 1fr; }
+    .timeline { grid-template-columns: 1fr; gap: 28px; text-align: left; }
+    .timeline::before { left: calc(var(--m) + 11px); right: auto; top: 12px; bottom: 12px; width: 1px; height: auto; }
+    .timeline li { grid-template-columns: 23px 1fr; justify-items: start; column-gap: 16px; row-gap: 2px; padding: 0; }
+    .dot { grid-row: span 2; margin: 0; }
+  }
+  @media (max-width: 559px) {
+    .impact ul { grid-template-columns: 1fr; max-width: 30rem; }
+    .impact li :global(img) { aspect-ratio: 16 / 9; }
+
+    .tiles, .results ul { grid-template-columns: 1fr; }
+    .tiles li, .results li { min-height: 0; }
+  }
+  @media (max-width: 479px) {
+    .people { column-gap: 12px; }
+    .people .h-sub { font-size: 17px; }
+    .bio { padding: 10px; font-size: 13.5px; }
+  }
+</style>

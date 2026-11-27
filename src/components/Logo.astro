@@ -1,0 +1,13 @@
+---
+import mark from '../assets/logo/mark.svg?raw';
+import word from '../assets/logo/word.svg?raw';
+import lockup from '../assets/logo/lockup.svg?raw';
+
+const { kind = 'mark' } = Astro.props;
+const svg = { mark, word, lockup }[kind as 'mark' | 'word' | 'lockup'];
+---
+<span class:list={['logo', kind]} set:html={svg} aria-hidden="true"></span>
+<style>
+  .logo { display: inline-block; height: 100%; color: inherit; }
+  .logo :global(svg) { display: block; width: auto; height: 100%; }
+</style>

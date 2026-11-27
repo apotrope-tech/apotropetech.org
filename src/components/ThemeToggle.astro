@@ -1,0 +1,38 @@
+---
+// Switches between the dark and light themes. The choice is kept in this browser only (localStorage), never sent anywhere.
+// Without JavaScript the button stays hidden and the page stays dark.
+---
+<button class="theme" type="button" aria-label="Switch to light mode" hidden>
+  <svg class="sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6" /><path d="M12 2.5v2.5M12 19v2.5M2.5 12H5M19 12h2.5M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+  <svg class="moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M19.5 14.5A8 8 0 0 1 9.5 4.5a8 8 0 1 0 10 10z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" /></svg>
+</button>
+
+<script>
+  const root = document.documentElement;
+  document.querySelectorAll<HTMLButtonElement>('button.theme').forEach((btn) => {
+    const sync = () => {
+      const light = root.dataset.theme === 'light';
+      btn.setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
+    };
+    btn.hidden = false;
+    sync();
+    btn.addEventListener('click', () => {
+      (window as unknown as { setTheme: (t: string) => void }).setTheme(root.dataset.theme === 'light' ? 'dark' : 'light');
+      sync();
+    });
+    new MutationObserver(sync).observe(root, { attributes: true, attributeFilter: ['data-theme'] });
+  });
+</script>
+
+<style>
+  .theme { display: grid; place-items: center; width: 44px; height: 44px; flex: none; border: 1px solid #4a4f51; color: inherit; transition: border-color .2s, color .2s; }
+  .theme[hidden] { display: none; }
+  .theme:hover { border-color: #f0824a; color: #f0824a; }
+  .theme svg { width: 20px; height: 20px; }
+  /* Show what the button will switch to. */
+  .sun { display: block; } .moon { display: none; }
+  :global(:root[data-theme='light']) .sun { display: none; }
+  :global(:root[data-theme='light']) .moon { display: block; }
+  :global(:root[data-theme='light']) .theme { border-color: #8e9693; }
+  :global(:root[data-theme='light']) .theme:hover { border-color: #a3410f; color: #a3410f; }
+</style>

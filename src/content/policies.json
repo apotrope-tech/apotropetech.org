@@ -1,0 +1,24 @@
+{
+  "privacy": {
+    "title": "Privacy",
+    "updated": "November 2026",
+    "points": [
+      "This site has no accounts, cookies, analytics, ads or tracking scripts.",
+      "Fonts and images load from this site. Reading the page sends nothing to anyone else. Links to sources and social profiles open other sites only when you click them.",
+      "If you use the contact form, your name, email, topic, suggested times and message are sent through FormSubmit (formsubmit.co), which emails them to us. We use them only to reply to you.",
+      "If you pick light or dark mode, that choice is saved in your own browser. It is never sent to us.",
+      "To have us delete a message you sent, email us and we will remove it."
+    ]
+  },
+  "accessibility": {
+    "title": "Accessibility",
+    "points": [
+      "We aim to meet WCAG 2.2 level AA.",
+      "Everything works with a keyboard, with a visible focus ring and a skip link to the content.",
+      "If your system asks for reduced motion, animations are turned off. Without JavaScript all content still shows.",
+      "Light and dark modes follow your system setting, and you can switch with the sun and moon button at the top of the page.",
+      "Every image has a text description, and renders and illustrations are labeled as such."
+    ],
+    "limits": "We have not yet tested the site with a screen reader. If something gets in your way, email us and we will fix it."
+  }
+}

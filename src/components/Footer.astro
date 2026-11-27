@@ -1,0 +1,77 @@
+---
+import Logo from './Logo.astro';
+import Social from './Social.astro';
+import { site } from '../site.config';
+import { sections } from '../sections';
+import team from '../content/team.json';
+import sources from '../content/sources.json';
+---
+<footer class="foot g-void">
+  <div class="top wrap">
+    <a class="lock" href="/#top" aria-label="Apotrope, back to top"><Logo kind="lockup" /></a>
+    <div class="cols">
+      <div>
+        <h2 class="h-item">ArcWatch</h2>
+        <p class="small">A clip-on arc monitor for satellite solar arrays. Prototype, not flight hardware.</p>
+        <p class="small">Apotrope is a student team at TJHSST, Virginia.</p>
+      </div>
+      <div>
+        <h2 class="h-item">Team</h2>
+        <ul class="small">{team.map((m) => <li>{m.name}, {m.role}</li>)}</ul>
+      </div>
+      <div>
+        <h2 class="h-item">Pages</h2>
+        <ul class="small"><li><a class="tlink" href="/#top">Home</a></li>{sections.map((s) => <li><a class="tlink" href={`/#${s.id}`}>{s.name}</a></li>)}</ul>
+      </div>
+      <div>
+        <h2 class="h-item">Contact</h2>
+        <p class="small"><a class="tlink" href={`mailto:${site.email}`}>{site.email}</a></p>
+        <div class="soc"><Social /></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="src wrap" id="sources" aria-labelledby="sources-title">
+    <h2 class="h-item" id="sources-title">Sources</h2>
+    <ol>
+      {sources.map((s, i) => (
+        <li id={`src-${s.id}`}><span class="n">{i + 1}</span> {s.text} <a class="tlink" href={s.url} rel="noopener noreferrer">Open<span class="sr"> source {i + 1}</span></a></li>
+      ))}
+    </ol>
+  </section>
+
+  <div class="base wrap small">
+    <p>Product images are renders from drawing Rev A, not photographs. Impact photos, via Wikimedia Commons: <a class="tlink" href="https://commons.wikimedia.org/wiki/File:Person_works_on_laptop_while_holding_smartphone_in_living_room.jpg" rel="noopener noreferrer">laptop</a> by Shixart1985, <a class="tlink" href="https://creativecommons.org/licenses/by/2.0/" rel="noopener noreferrer">CC BY 2.0</a>; <a class="tlink" href="https://commons.wikimedia.org/wiki/File:Hurricane_Helene_GOES-16_3_51_pm_26_September_2024.png" rel="noopener noreferrer">Hurricane Helene</a> by NOAA, public domain; <a class="tlink" href="https://commons.wikimedia.org/wiki/File:Olkhon_Island,_GPS_navigation,_Smartphone,_Lake_Baikal,_Russia.jpg" rel="noopener noreferrer">GPS map</a> by Vyacheslav Argenberg, <a class="tlink" href="https://creativecommons.org/licenses/by/4.0/" rel="noopener noreferrer">CC BY 4.0</a>.</p>
+    <p>Apotrope (AP-uh-trohp), from the Greek for "to turn away." © {new Date().getFullYear()}</p>
+    <ul class="legal" aria-label="Policies"><li><a class="tlink" href="/privacy">Privacy</a></li><li><a class="tlink" href="/accessibility">Accessibility</a></li></ul>
+  </div>
+</footer>
+
+<style>
+  .foot { padding-top: clamp(56px, 6vw, 88px); border-top: 1px solid var(--line); }
+  .top { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 9fr); gap: 40px clamp(16px, 2vw, 32px); }
+  .lock { display: block; height: clamp(80px, 8vw, 120px); width: fit-content; }
+  .cols { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 28px clamp(16px, 2vw, 32px); }
+  .cols .h-item { margin-bottom: 10px; }
+  .cols .small + .small { margin-top: 8px; }
+  .cols ul { display: grid; gap: 4px; }
+  .cols a:hover { color: var(--ink); }
+  .soc { margin-top: 12px; }
+  .soc :global(.social) { flex-direction: column; align-items: flex-start; }
+
+  .src { margin-top: clamp(48px, 5vw, 72px); padding-top: 24px; border-top: 1px solid var(--line); }
+  .src ol { display: grid; gap: 8px; margin-top: 12px; font-size: 14px; color: var(--dim); }
+  .src li { scroll-margin-top: 96px; max-width: 70rem; transition: color .6s; }
+  .src li:target { color: var(--ink); }
+  .src .n { font-weight: 600; color: var(--accent-text); margin-right: 6px; }
+  .src a { font-weight: 600; color: var(--soft); margin-left: 6px; }
+
+  .legal { display: flex; gap: 20px; }
+  .legal a { color: var(--soft); font-weight: 600; }
+
+  .base { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; margin-top: 32px; padding-block: 20px 28px; border-top: 1px solid var(--line); }
+
+  @media (max-width: 1099px) { .cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 759px) { .top { grid-template-columns: 1fr; } }
+  @media (max-width: 459px) { .cols { grid-template-columns: 1fr; } }
+</style>

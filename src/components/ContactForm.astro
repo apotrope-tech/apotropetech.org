@@ -1,0 +1,87 @@
+---
+// Sends straight to the team inbox through FormSubmit, so the site still needs no server.
+// With JavaScript the message is sent in place; without it the form posts normally and FormSubmit shows its own thank-you page.
+import { site } from '../site.config';
+const action = site.formEndpoint.replace('/ajax/', '/');
+---
+<form class="cform" action={action} method="POST" data-endpoint={site.formEndpoint}>
+  <input type="hidden" name="_subject" value="New message from the ArcWatch website" />
+  <input type="hidden" name="_template" value="table" />
+  <input type="text" name="_honey" class="hp" tabindex="-1" autocomplete="off" aria-hidden="true" />
+
+  <div class="row two">
+    <label><span>Name</span><input name="name" required autocomplete="name" /></label>
+    <label><span>Email</span><input type="email" name="email" required autocomplete="email" /></label>
+  </div>
+  <fieldset class="topic">
+    <legend>What is this about?</legend>
+    <label><input type="radio" name="topic" value="Schedule a call" checked /><span>Schedule a call</span></label>
+    <label><input type="radio" name="topic" value="Testing or lab partnership" /><span>Testing or lab time</span></label>
+    <label><input type="radio" name="topic" value="General question" /><span>A question</span></label>
+  </fieldset>
+  <label class="times"><span>Good times for a call <em>(optional)</em></span><input name="call_times" placeholder="e.g. weekdays after 4 pm ET" /></label>
+  <label><span>Message</span><textarea name="message" rows="4" required></textarea></label>
+  <div class="send">
+    <button class="btn" type="submit">Send message</button>
+    <p class="status" role="status" aria-live="polite"></p>
+  </div>
+</form>
+
+<script>
+  const form = document.querySelector<HTMLFormElement>('.cform');
+  if (form) {
+    const status = form.querySelector<HTMLElement>('.status')!;
+    const button = form.querySelector<HTMLButtonElement>('button[type=submit]')!;
+    const times = form.querySelector<HTMLElement>('.times')!;
+    const syncTimes = () => { times.hidden = (form.elements.namedItem('topic') as RadioNodeList).value !== 'Schedule a call'; };
+    form.addEventListener('change', syncTimes);
+    syncTimes();
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      button.disabled = true;
+      status.dataset.state = '';
+      status.textContent = 'Sending…';
+      try {
+        const res = await fetch(form.dataset.endpoint!, { method: 'POST', headers: { Accept: 'application/json' }, body: new FormData(form) });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.success === 'false' || data.success === false) throw new Error();
+        form.reset(); syncTimes();
+        status.dataset.state = 'ok';
+        status.textContent = 'Sent. We will reply by email, usually within a few days.';
+      } catch {
+        status.dataset.state = 'err';
+        status.textContent = 'That did not send. Please email us directly instead.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  }
+</script>
+
+<style>
+  .cform { display: grid; gap: 18px; }
+  .row.two { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  label { display: grid; gap: 8px; }
+  label > span, legend { font: 600 14px/1.2 var(--sans); font-stretch: 106%; }
+  em { font-style: normal; font-weight: 500; color: var(--dim); }
+  input, textarea { width: 100%; min-height: 48px; padding: 12px 14px; border: 1px solid var(--line-strong); border-radius: 0; background: var(--plate); color: var(--ink); font: 400 16px/1.4 var(--sans); transition: border-color .2s; }
+  textarea { resize: vertical; min-height: 120px; }
+  input:focus-visible, textarea:focus-visible { outline: 2px solid var(--accent); outline-offset: 0; border-color: var(--accent); }
+  input::placeholder { color: var(--dim); }
+  .hp { position: absolute; left: -9999px; width: 1px; height: 1px; }
+  .topic { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; border: 0; }
+  .topic legend { margin-bottom: 8px; padding: 0; }
+  .topic label { display: block; cursor: pointer; }
+  .topic input { position: absolute; opacity: 0; width: 1px; height: 1px; min-height: 0; }
+  .topic span { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border: 1px solid var(--line-strong); font: 500 15px/1 var(--sans); transition: border-color .2s, background-color .2s, color .2s; }
+  .topic label:hover span { border-color: var(--ink); }
+  .topic input:checked + span { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .topic input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .times[hidden] { display: none; }
+  .send { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; }
+  .send .btn:disabled { opacity: .6; cursor: progress; }
+  .status { font-size: 15px; color: var(--soft); }
+  .status[data-state='ok'] { color: var(--ink); }
+  .status[data-state='err'] { color: var(--accent-text); }
+  @media (max-width: 559px) { .row.two { grid-template-columns: 1fr; } }
+</style>

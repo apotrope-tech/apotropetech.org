@@ -1,0 +1,13 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Page not found" description="This page does not exist." jump={false}>
+  <section class="nf g-void wrap">
+    <p class="cap">Error 404</p>
+    <h1 class="h-sec">This page does not exist.</h1>
+    <p><a class="btn" href="/">Back to ArcWatch</a></p>
+  </section>
+</Base>
+<style>
+  .nf { min-height: 70svh; display: grid; align-content: center; gap: 24px; padding-top: 120px; }
+</style>

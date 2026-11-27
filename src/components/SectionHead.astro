@@ -1,0 +1,19 @@
+---
+// Opens a section: a numbered label, one centred statement, an optional line under it.
+// The number comes from the section's place in src/sections.ts, so reordering sections renumbers them.
+import { sections } from '../sections';
+import Cited from './Cited.astro';
+interface Props { id: string; label: string; title: string; lede?: string }
+const { id, label, title, lede } = Astro.props;
+const n = sections.findIndex((s) => s.id === id) + 1;
+---
+<header class="shead wrap" data-reveal>
+  <p class="label">{n > 0 && <span class="num" aria-hidden="true">{String(n).padStart(2, '0')}</span>}{label}</p>
+  <h2 class="h-sec" id={`${id}-title`}>{title}</h2>
+  {lede && <p class="lede"><Cited text={lede} /></p>}
+</header>
+<style>
+  .shead { display: grid; justify-items: center; gap: 22px; text-align: center; margin-bottom: clamp(40px, 5vw, 72px); }
+  .h-sec { max-width: 18em; }
+  .lede { max-width: 36rem; margin-inline: auto; }
+</style>

@@ -1,0 +1,5 @@
+---
+import PolicyPage from '../components/PolicyPage.astro';
+import { accessibility } from '../content/policies.json';
+---
+<PolicyPage title={accessibility.title} description="How this site is built to be usable by everyone, and its known limits." points={accessibility.points} note={accessibility.limits} other={{ href: '/privacy', name: 'Privacy' }} />

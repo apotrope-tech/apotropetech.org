@@ -1,0 +1,37 @@
+---
+// Instagram, LinkedIn and YouTube. Set the URLs in src/site.config.ts; an empty one shows as "Soon".
+import { site } from '../site.config';
+const items = [
+  { key: 'instagram', name: 'Instagram', url: site.social.instagram },
+  { key: 'linkedin', name: 'LinkedIn', url: site.social.linkedin },
+  { key: 'youtube', name: 'YouTube', url: site.social.youtube },
+];
+const { compact = false } = Astro.props;
+---
+<ul class:list={['social', { compact }]}>
+  {items.map((s) => {
+    const icon = s.key === 'instagram'
+      ? <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5" fill="none" stroke="currentColor" stroke-width="1.6" /><circle cx="12" cy="12" r="4" fill="none" stroke="currentColor" stroke-width="1.6" /><circle cx="17.2" cy="6.8" r="1.1" fill="currentColor" /></svg>
+      : s.key === 'linkedin'
+        ? <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="1.6" /><path d="M8 10.5V16M8 7.6v.1M11.5 16v-5.5M11.5 13c0-1.7 1-2.6 2.3-2.6s2.2.9 2.2 2.6V16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" /></svg>
+        : <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5.5" width="19" height="13" rx="3.5" fill="none" stroke="currentColor" stroke-width="1.6" /><path d="M10.2 9.2v5.6l4.8-2.8z" fill="currentColor" /></svg>;
+    return (
+      <li>
+        {s.url
+          ? <a href={s.url} rel="noopener noreferrer" target="_blank">{icon}<span>{s.name}</span></a>
+          : <span class="off" title={`${s.name} coming soon`}>{icon}<span>{s.name}</span>{!compact && <small>Soon</small>}</span>}
+      </li>
+    );
+  })}
+</ul>
+<style>
+  .social { display: flex; flex-wrap: wrap; gap: 10px; }
+  .social a, .off { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 16px 0 12px; border: 1px solid var(--line-strong); font: 600 15px/1 var(--sans); font-stretch: 106%; transition: border-color .2s, color .2s; }
+  .social a:hover { border-color: var(--accent); color: var(--accent-text); }
+  .off { border-style: dashed; color: var(--dim); }
+  .off small { font: 500 12px/1 var(--sans); padding: 3px 6px; background: var(--plate-2); color: var(--dim); }
+  svg { width: 20px; height: 20px; flex: none; }
+  .compact a, .compact .off { min-height: 40px; padding: 0 10px; border: 0; }
+  .compact span:not(.off) { display: none; }
+  .compact .off > span { display: none; }
+</style>

@@ -1,0 +1,79 @@
+---
+import '../styles/global.css';
+import { site } from '../site.config';
+import Logo from '../components/Logo.astro';
+import Nav from '../components/Nav.astro';
+import Footer from '../components/Footer.astro';
+import ThemeToggle from '../components/ThemeToggle.astro';
+
+interface Props { title?: string; description: string; jump?: boolean }
+const { title, description, jump = true } = Astro.props;
+const fullTitle = title ? `${title} | Apotrope` : 'ArcWatch by Apotrope';
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="theme-color" content="#000000" />
+  <script is:inline>
+    // Runs before paint so the page never flashes the wrong theme. A saved choice wins over the system setting.
+    (() => {
+      const r = document.documentElement;
+      r.classList.add('js');
+      let saved = null;
+      try { saved = localStorage.getItem('theme'); } catch {}
+      const sys = matchMedia('(prefers-color-scheme: light)');
+      const apply = (t) => {
+        r.dataset.theme = t;
+        document.querySelector('meta[name=theme-color]')?.setAttribute('content', t === 'light' ? '#f7f8f6' : '#000000');
+      };
+      apply(saved === 'light' || saved === 'dark' ? saved : sys.matches ? 'light' : 'dark');
+      sys.addEventListener('change', (e) => { let s = null; try { s = localStorage.getItem('theme'); } catch {} if (!s) apply(e.matches ? 'light' : 'dark'); });
+      window.setTheme = (t) => { apply(t); try { localStorage.setItem('theme', t); } catch {} };
+    })();
+  </script>
+  <title>{fullTitle}</title>
+  <meta name="description" content={description} />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="/favicon-48.png" sizes="48x48" type="image/png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <meta property="og:title" content={fullTitle} />
+  <meta property="og:description" content={description} />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content={new URL('/og.png', Astro.site)} />
+  <meta name="twitter:card" content="summary_large_image" />
+  {site.noindex && <meta name="robots" content="noindex, nofollow" />}
+</head>
+<body class="g-void" id="top">
+  <a class="skip" href="#main">Skip to content</a>
+  {jump ? <Nav /> : <header class="head"><a class="brand" href="/" aria-label="Apotrope home"><Logo kind="mark" /><Logo kind="word" /></a><span class="head-r"><a class="brand" href="/">Back to ArcWatch</a><ThemeToggle /></span></header>}
+  <main id="main"><slot /></main>
+  <Footer />
+  <script>
+    // Each [data-reveal] element rises in once as it enters the screen. Without JavaScript it is simply shown.
+    const io = new IntersectionObserver((es) => es.forEach((e) => {
+      if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); }
+    }), { rootMargin: '0px 0px -8% 0px' });
+    document.querySelectorAll('[data-reveal]').forEach((el) => io.observe(el));
+  </script>
+</body>
+</html>
+<style is:global>
+  .skip { position: absolute; left: -999px; top: 12px; z-index: 30; }
+  .skip:focus { left: 12px; background: #f0824a; color: #000; padding: 10px 16px; }
+  /* Both header pieces carry their own black plate, so they read the same over black and over film. */
+  .head { position: fixed; z-index: 20; inset: 0 0 auto; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 12px var(--m) 0; pointer-events: none; }
+  .head > * { pointer-events: auto; }
+  .brand { display: inline-flex; align-items: center; gap: 12px; height: 44px; padding: 0 14px; background: #000; color: #f1f2ef; border: 1px solid #2c3032; font: 600 14px/1 var(--sans); font-stretch: 110%; }
+  .head-r { display: flex; gap: 8px; }
+  .head-r .theme { background: #000; color: #f1f2ef; border-color: #2c3032; }
+  :root[data-theme='light'] .head-r .theme { background: #f7f8f6; color: #0d1113; border-color: #c3c9c6; }
+  .brand .mark { height: 24px; }
+  .brand .word { height: 10px; }
+  .brand:hover { border-color: #6b7173; }
+  :root[data-theme='light'] .brand { background: #f7f8f6; color: #0d1113; border-color: #c3c9c6; }
+  :root[data-theme='light'] .brand:hover { border-color: #8e9693; }
+  @media (max-width: 420px) { .brand .word { display: none; } }
+</style>
